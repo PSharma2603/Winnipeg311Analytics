@@ -1,0 +1,6 @@
+@Winnipeg311Analytics_HostAddress = http://localhost:5062
+
+GET {{Winnipeg311Analytics_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

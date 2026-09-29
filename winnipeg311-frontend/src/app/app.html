@@ -1,0 +1,503 @@
+<div class="container">
+
+  <h1>
+    Winnipeg 311 Analytics
+  </h1>
+
+  <p>
+    Service request data from the City of Winnipeg Open Data API
+  </p>
+
+
+  <!-- MAIN FILTERS -->
+
+  <div class="filters">
+
+    <div class="filter-group">
+
+      <label for="ward">
+        Ward
+      </label>
+
+      <select
+        id="ward"
+        [(ngModel)]="selectedWard"
+      >
+
+        <option value="">
+          All Wards
+        </option>
+
+        <option
+          *ngFor="let ward of wards"
+          [value]="ward"
+        >
+          {{ ward }}
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="filter-group">
+
+      <label for="serviceArea">
+        Service Area
+      </label>
+
+      <select
+        id="serviceArea"
+        [(ngModel)]="selectedServiceArea"
+      >
+
+        <option value="">
+          All Service Areas
+        </option>
+
+        <option
+          *ngFor="let area of serviceAreas"
+          [value]="area"
+        >
+          {{ area }}
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <button
+      (click)="loadServiceRequests()"
+    >
+      Search
+    </button>
+
+
+    <button
+      (click)="clearFilters()"
+    >
+      Clear
+    </button>
+
+  </div>
+
+
+  <!-- SUMMARY -->
+
+  <div class="summary">
+
+    <strong>
+      Requests Displayed:
+      {{ serviceRequests.length }}
+    </strong>
+
+  </div>
+
+
+  <!-- LOADING -->
+
+  <p *ngIf="loading">
+    Loading 311 data...
+  </p>
+
+
+  <!-- ERROR -->
+
+  <p *ngIf="errorMessage">
+    {{ errorMessage }}
+  </p>
+
+
+  <!-- ANALYTICS -->
+
+  <div
+    class="analytics-section"
+    *ngIf="
+      !loading &&
+      serviceRequests.length > 0
+    "
+  >
+
+    <div class="analytics-header">
+
+      <h2>
+        Requests by Service Area
+      </h2>
+
+      <span>
+        Based on
+        {{ serviceRequests.length }}
+        displayed requests
+      </span>
+
+    </div>
+
+
+    <div
+      class="analytics-row"
+      *ngFor="let item of analytics"
+    >
+
+      <div class="analytics-name">
+        {{ item.name }}
+      </div>
+
+
+      <div class="analytics-bar-container">
+
+        <div
+          class="analytics-bar"
+          [style.width.%]="
+            serviceRequests.length > 0
+              ? (
+                  item.count /
+                  serviceRequests.length
+                ) * 100
+              : 0
+          "
+        >
+        </div>
+
+      </div>
+
+
+      <div class="analytics-count">
+        {{ item.count }}
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- WARD COMPARISON -->
+
+  <div class="comparison-section">
+
+    <div class="comparison-header">
+
+      <div>
+
+        <h2>
+          Compare Wards
+        </h2>
+
+        <p>
+          Compare 311 service request activity
+          between two Winnipeg wards.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- COMPARISON CONTROLS -->
+
+    <div class="comparison-controls">
+
+      <div class="filter-group">
+
+        <label for="compareWard1">
+          First Ward
+        </label>
+
+        <select
+          id="compareWard1"
+          [(ngModel)]="compareWard1"
+        >
+
+          <option value="">
+            Select Ward
+          </option>
+
+          <option
+            *ngFor="let ward of wards"
+            [value]="ward"
+          >
+            {{ ward }}
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="comparison-versus">
+        VS
+      </div>
+
+
+      <div class="filter-group">
+
+        <label for="compareWard2">
+          Second Ward
+        </label>
+
+        <select
+          id="compareWard2"
+          [(ngModel)]="compareWard2"
+        >
+
+          <option value="">
+            Select Ward
+          </option>
+
+          <option
+            *ngFor="let ward of wards"
+            [value]="ward"
+          >
+            {{ ward }}
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <button
+        class="compare-button"
+        (click)="compareWards()"
+      >
+        Compare
+      </button>
+
+    </div>
+
+
+    <!-- COMPARISON ERROR -->
+
+    <p
+      class="comparison-error"
+      *ngIf="comparisonError"
+    >
+      {{ comparisonError }}
+    </p>
+
+
+    <!-- COMPARISON LOADING -->
+
+    <p *ngIf="comparisonLoading">
+      Comparing wards...
+    </p>
+
+
+    <!-- COMPARISON RESULTS -->
+
+    <div
+      class="comparison-results"
+      *ngIf="
+        comparison1 &&
+        comparison2 &&
+        !comparisonLoading
+      "
+    >
+
+
+      <!-- FIRST WARD CARD -->
+
+      <div class="comparison-card">
+
+        <span class="card-label">
+          Ward
+        </span>
+
+        <h3>
+          {{ comparison1.ward }}
+        </h3>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Total Requests
+          </span>
+
+          <strong>
+            {{ comparison1.totalRequests }}
+          </strong>
+
+        </div>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Top Service Area
+          </span>
+
+          <strong>
+            {{ comparison1.topServiceArea }}
+          </strong>
+
+        </div>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Top Area in Latest 100
+          </span>
+
+          <strong>
+            {{ comparison1.topServiceAreaCount }}
+          </strong>
+
+        </div>
+
+      </div>
+
+
+      <!-- SECOND WARD CARD -->
+
+      <div class="comparison-card">
+
+        <span class="card-label">
+          Ward
+        </span>
+
+        <h3>
+          {{ comparison2.ward }}
+        </h3>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Total Requests
+          </span>
+
+          <strong>
+            {{ comparison2.totalRequests }}
+          </strong>
+
+        </div>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Top Service Area
+          </span>
+
+          <strong>
+            {{ comparison2.topServiceArea }}
+          </strong>
+
+        </div>
+
+
+        <div class="comparison-stat">
+
+          <span>
+            Top Area in Latest 100
+          </span>
+
+          <strong>
+            {{ comparison2.topServiceAreaCount }}
+          </strong>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- RESULTS TABLE -->
+
+  <table
+    *ngIf="
+      !loading &&
+      serviceRequests.length > 0
+    "
+  >
+
+    <thead>
+
+      <tr>
+
+        <th>
+          Date
+        </th>
+
+        <th>
+          Service Area
+        </th>
+
+        <th>
+          Service Request
+        </th>
+
+        <th>
+          Ward
+        </th>
+
+        <th>
+          Neighbourhood
+        </th>
+
+      </tr>
+
+    </thead>
+
+
+    <tbody>
+
+      <tr
+        *ngFor="
+          let request
+          of serviceRequests
+        "
+      >
+
+        <td>
+          {{
+            request.sr_date
+              | date:'mediumDate'
+          }}
+        </td>
+
+
+        <td>
+          {{ request.service_area }}
+        </td>
+
+
+        <td>
+          {{ request.service_request }}
+        </td>
+
+
+        <td>
+          {{ request.ward }}
+        </td>
+
+
+        <td>
+          {{ request.neighbourhood }}
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+
+
+  <!-- NO RESULTS -->
+
+  <p
+    *ngIf="
+      !loading &&
+      !errorMessage &&
+      serviceRequests.length === 0
+    "
+  >
+    No matching service requests found.
+  </p>
+
+</div>
